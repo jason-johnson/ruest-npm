@@ -1,13 +1,16 @@
 {
-  "name": "@ruest/svelte",
+  "name": "@ruest/svelte-cli",
   "version": "1.0.0",
-  "description": "Package for setting up a Svelte app to talk to a Ruest server",
+  "description": "CLI for setting up a Svelte app to talk to a Ruest server",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "bin": {
+    "ruest-svelte": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -26,8 +29,13 @@
   },
   "homepage": "https://github.com/jason-johnson/ruest-npm#readme",
   "devDependencies": {
+    "@types/node": "^22.13.1",
+    "@types/yargs": "^17.0.33",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.6",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2"
   }
 }
