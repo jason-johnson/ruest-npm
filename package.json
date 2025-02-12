@@ -1,0 +1,14 @@
+{
+  "name": "ruest-npm",
+  "version": "1.0.0",
+  "description": "mono repository for npm packages related to ruest project",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:ruest-svelte",
+    "build:ruest-svelte": "cd packages/svelte && npm run build"
+  },
+  "keywords": [],
+  "author": "Jason Johnson"
+}
