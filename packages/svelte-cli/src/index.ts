@@ -3,12 +3,12 @@
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 
-interface InputObject {
+interface RuestSchemaEntry {
   mime_types: string[];
   schema: any;
 }
 
-function processEntry(input: InputObject): void {
+function processEntry(input: RuestSchemaEntry): void {
   console.log("MIME Types:", input.mime_types);
   console.log("Schema:", input.schema);
 }
