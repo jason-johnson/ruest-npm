@@ -3,6 +3,16 @@
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 
+interface InputObject {
+  mime_types: string[];
+  schema: any;
+}
+
+function processEntry(input: InputObject): void {
+  console.log("MIME Types:", input.mime_types);
+  console.log("Schema:", input.schema);
+}
+
 const argv = yargs(hideBin(process.argv))
   .usage("usage: $0 <Ruest server address>")
   .demandCommand(1, "Ruest compatible server address is required")
@@ -21,5 +31,8 @@ fetch(serverUrl).then(async (response) => {
   }
 
   const schema = await response.json();
-  console.log(schema);
+
+  for (const entry of schema) {
+    processEntry(entry);
+  }
 });
