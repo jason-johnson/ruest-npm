@@ -51,7 +51,6 @@ fetch(serverUrl).then(async (response) => {
   const schema = await response.json();
 
   const schemaComponentMap = new Map<string, string>();
-  var fullSchema = "";
 
   for (const entry of schema) {
     const rs = entry as RuestSchemaEntry;
