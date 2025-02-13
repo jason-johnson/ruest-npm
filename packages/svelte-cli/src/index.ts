@@ -50,7 +50,19 @@ fetch(serverUrl).then(async (response) => {
 
   const schema = await response.json();
 
+  const schemaComponentMap = new Map<string, string>();
+  var fullSchema = "";
+
   for (const entry of schema) {
-    processEntry(entry);
+    const rs = entry as RuestSchemaEntry;
+    const title = rs.schema.title ?? "Untitled";
+    
+    for (const mime of rs.mime_types) {
+      schemaComponentMap.set(mime, title);
+    }
+
+    processEntry(rs);
   }
+
+  console.log("Schema component map:", schemaComponentMap);
 });
