@@ -18,7 +18,7 @@ interface RuestSchemaEntry {
   schema: JSONSchema;
 }
 
-async function processEntry(input: RuestSchemaEntry, baseFolder: string) {
+async function processEntry(input: RuestSchemaEntry, libFolder: string) {
   console.log("MIME Types:", input.mime_types);
   const title = input.schema.title ?? "Untitled";
   console.log("Schema title:", title);
@@ -27,10 +27,22 @@ async function processEntry(input: RuestSchemaEntry, baseFolder: string) {
   const ts = await compile(input.schema, title, { additionalProperties: false, bannerComment: bannerComment })
   console.log("Generated TypeScript:", ts);
   
-  await mkdir(baseFolder, { recursive: true });
+  const ruestFolder = join(libFolder, "ruest");
+  await mkdir(ruestFolder, { recursive: true });
   const data = new Uint8Array(Buffer.from(ts));
-  const file = join(baseFolder, `${title}.ts`);
+  const file = join(ruestFolder, `${title}.ts`);
   await writeFile(file, data);
+
+  const componentFolder = join(libFolder, "components");
+  await mkdir(componentFolder, { recursive: true });
+  const componentFile = join(componentFolder, `${title}.svelte`);
+  const componentData = new Uint8Array(Buffer.from(
+`<script lang="ts">
+  import { ${title} } from '../ruest/${title}'
+
+  export let data: ${title}
+</script>`));
+  await writeFile(componentFile, componentData);
 }
 
 const argv = yargs(hideBin(process.argv))
@@ -55,7 +67,7 @@ fetch(serverUrl).then(async (response) => {
   const schema = await response.json();
 
   const schemaComponentMap = new Map<string, string>();
-  const baseFolder = join("src", "lib", "ruest");
+  const libFolder = join("src", "lib");
 
   for (const entry of schema) {
     const rs = entry as RuestSchemaEntry;
@@ -65,7 +77,7 @@ fetch(serverUrl).then(async (response) => {
       schemaComponentMap.set(mime, title);
     }
 
-    processEntry(rs, baseFolder).catch((err) => { console.error("Failed to process schema entry:", err); });
+    processEntry(rs, libFolder).catch((err) => { console.error("Failed to process schema entry:", err); });
   }
 
   console.log("Schema component map:", schemaComponentMap);
