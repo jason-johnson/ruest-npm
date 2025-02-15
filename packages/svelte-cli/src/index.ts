@@ -35,19 +35,14 @@ async function exists(path: string) {
   }
 }
 
-async function renderTemplateFile(templatePath: string, view: any) : Promise<string> {
-  const path = join(__dirname, "templates", templatePath);
+async function renderTemplateFile(templateName: string, view: any): Promise<string> {
+  const path = join(__dirname, "templates", templateName);
   const contents = await readFile(path, "utf-8");
 
   return Mustatch.render(contents, view);
 }
 
-async function writeTsFile(
-  folder: string,
-  fileName: string,
-  content: string,
-  overwrite = true
-) {
+async function writeTsFile(folder: string, fileName: string, content: string, overwrite = true) {
   const fullPath = join(folder, fileName);
   if (!overwrite) {
     if (await exists(fullPath)) {
@@ -63,16 +58,12 @@ async function writeTsFile(
 }
 
 async function processEntry(input: RuestSchemaEntry, libFolder: string) {
-  console.log("MIME Types:", input.mime_types);
   const title = input.schema.title ?? "Untitled";
-  console.log("Schema title:", title);
-  console.log("Schema:", input.schema);
 
   const ts = await compile(input.schema, title, {
     additionalProperties: false,
     bannerComment: noModifyBannerComment,
   });
-  console.log("Generated TypeScript:", ts);
 
   const ruestFolder = join(libFolder, "ruest");
   await writeTsFile(ruestFolder, `${title}.ts`, ts);
@@ -80,112 +71,48 @@ async function processEntry(input: RuestSchemaEntry, libFolder: string) {
   const componentFolder = join(libFolder, "components");
   const componentContents = await renderTemplateFile("component.svelte.mustache", { name: title });
 
-  await writeTsFile(
-    componentFolder,
-    `${title}Component.svelte`,
-    componentContents,
-    false
-  );
+  await writeTsFile(componentFolder, `${title}Component.svelte`, componentContents, false);
 }
 
 async function writeErrorFiles() {
   const errorsPath = join("src", "lib", "components", "errors");
-  const missingContentTypeContents = `${canModifyBannerComment}
-<script lang="ts">
-    interface MissingContentTypeProps {
-        contentType: string
-        item: any
-    }
-    export let data: MissingContentTypeProps
-</script>
-
-<div>
-    <h1>Server error: missing content type</h1>
-    <p>Content type was not sent, is this a Ruest server?</p>
-    <p>Here's the raw data:</p>
-    <pre>{JSON.stringify(data.item, null, 2)}</pre>
-</div>`;
+  const missingContentTypeContents = await renderTemplateFile("MissingContentType.svelte.mustache", {});
   await writeTsFile(errorsPath, "MissingContentType.svelte", missingContentTypeContents, false);
 
-  const unknownContentTypeContents = `${canModifyBannerComment}
-<script lang="ts">
-	interface UnknownContentTypeProps {
-		contentType: string;
-		item: any;
-	}
-	export let data: UnknownContentTypeProps;
-</script>
-
-{#if import.meta.env.DEV}
-	<div class="p-8">
-		<h1
-			class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl"
-		>
-			Unknown Content Type
-		</h1>
-		<p>Unknown content type <span class="bg-slate-200">{data.contentType}</span> recieved.</p>
-		<p class="pt-4">Here's the raw data:</p>
-		<code class="block overflow-x-scroll whitespace-pre bg-slate-200"
-			>{JSON.stringify(data.item, null, 2)}</code
-		>
-	</div>
-{:else}
-	<div class="p-8">
-		<h1
-			class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl"
-		>
-			Something went wrong...
-		</h1>
-		<p>We're sorry for the inconvenience</p>
-	</div>
-{/if}`;
+  const unknownContentTypeContents = await renderTemplateFile("UnknownContentType.svelte.mustache", {});
   await writeTsFile(errorsPath, "UnknownContentType.svelte", unknownContentTypeContents, false);
 }
 
 async function writeEnvFile(serverUrl: string) {
-  const envContents = `${canModifyBannerComment}
-VITE_RUEST_SERVER="${serverUrl}"`;
+  const envContents = await renderTemplateFile("dotEnv.mustache", { serverUrl });
 
   await writeTsFile(".", ".env", envContents, false);
 }
 
 async function writeHooksFile() {
-  const hooksContents = `${canModifyBannerComment}
-import type { Handle } from '@sveltejs/kit';
-
-export const handle: Handle = async ({ event, resolve }) => {
-	return resolve(event, {
-        filterSerializedResponseHeaders: (name) => name == 'content-type',
-    });
-};`;
-
+  const hooksContents = await renderTemplateFile("hooks.server.ts.mustache", { });
   await writeTsFile("src", "hooks.server.ts", hooksContents, false);
 }
 
-async function writeSvelteRouter() {
-  const pageTsPath = join("src", "routes", "[...path]");
-  const pageTsContents = `${canModifyBannerComment}
-import { error } from '@sveltejs/kit';
-import type { PageLoad } from './$types';
+async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
+  const svelteRouterPath = join("src", "routes", "[...path]");
 
-export const load: PageLoad = async ({ fetch, params }) => {
-	const url = new URL(params.path, import.meta.env.VITE_RUEST_SERVER ?? "http://localhost:8080")
-	console.log(\`Load URL: \${url.toString()}\`);
-	const res = await fetch(url);
+  const pageTsContents = await renderTemplateFile("+page.ts.mustache", {  });
+  await writeTsFile(svelteRouterPath, "+page.ts", pageTsContents, false);
 
-	if (!res.ok) {
-		error(res.status, res.statusText)
-	}
+  const components = Array.from(schemaComponentMap.values());
+  
+  var routes = new Array<{contentType: string, component: string, logic: string}>();
 
-	const item = await res.json();
-	return {
-		item,
-		contentType: res.headers.get('content-type') ?? 'unknown',
-	};
-};
-`;
+  var first = true;
+  for (const [contentType, component] of schemaComponentMap) {
+    const logic = first ? "{#if" : "{:else if";
+    first = false;
+    routes.push({ contentType, component, logic });
+  }
 
-  await writeTsFile(pageTsPath, "+page.ts", pageTsContents, false);
+  const pageSvelteContents = await renderTemplateFile("+page.svelte.mustache", { components, routes });
+  await writeTsFile(svelteRouterPath, "+page.svelte", pageSvelteContents, false);
 }
 
 async function processSchema(serverUrl: URL) {
@@ -194,9 +121,7 @@ async function processSchema(serverUrl: URL) {
   const response = await fetch(serverUrl);
 
   if (!response.ok) {
-    console.error(
-      `Failed to fetch schema, server responded with: ${response.status} - ${response.statusText}`
-    );
+    console.error(`Failed to fetch schema, server responded with: ${response.status} - ${response.statusText}`);
     process.exit(1);
   }
 
@@ -223,10 +148,7 @@ async function processSchema(serverUrl: URL) {
   await writeErrorFiles();
   await writeEnvFile(serverUrl.toString());
   await writeHooksFile();
-  await writeSvelteRouter();
-
-  console.log("Schema component map:", schemaComponentMap);
-  console.log("Known MIME Types:", knownMimeTypes);
+  await writeSvelteRouter(schemaComponentMap);
 }
 
 const argv = yargs(hideBin(process.argv))
