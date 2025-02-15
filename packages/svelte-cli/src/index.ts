@@ -100,7 +100,7 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
   const pageTsContents = await renderTemplateFile("+page.ts.mustache", {  });
   await writeTsFile(svelteRouterPath, "+page.ts", pageTsContents, false);
 
-  const components = Array.from(schemaComponentMap.values());
+  const components = Array.from(schemaComponentMap.values()).map(component => `${component}Component`);
   
   var routes = new Array<{contentType: string, component: string, logic: string}>();
 
@@ -108,7 +108,7 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
   for (const [contentType, component] of schemaComponentMap) {
     const logic = first ? "{#if" : "{:else if";
     first = false;
-    routes.push({ contentType, component, logic });
+    routes.push({ contentType, component: `${component}Component`, logic });
   }
 
   const pageSvelteContents = await renderTemplateFile("+page.svelte.mustache", { components, routes });
