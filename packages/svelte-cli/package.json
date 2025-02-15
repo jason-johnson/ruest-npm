@@ -16,7 +16,8 @@
     "clean": "rimraf dist/",
     "copy-files": "copyfiles -u 1 src/**/*.mustache dist/",
     "build": "npm run clean && tsup && npm run copy-files",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
