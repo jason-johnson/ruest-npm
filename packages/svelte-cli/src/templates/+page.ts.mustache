@@ -6,10 +6,12 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
+const acceptMimeTypes = "{{{ acceptMimeTypes }}}"
+
 export const load: PageLoad = async ({ fetch, params }) => {
 	const url = new URL(params.path, import.meta.env.VITE_RUEST_SERVER ?? "http://localhost:8080")
 	console.log(`Load URL: ${url.toString()}`);
-	const res = await fetch(url);
+	const res = await fetch(url, { headers: { accept: acceptMimeTypes } });
 
 	if (!res.ok) {
 		error(res.status, res.statusText)

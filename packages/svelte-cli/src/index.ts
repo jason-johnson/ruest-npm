@@ -97,7 +97,9 @@ async function writeHooksFile() {
 async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
   const svelteRouterPath = join("src", "routes", "[...path]");
 
-  const pageTsContents = await renderTemplateFile("+page.ts.mustache", {  });
+  const acceptMimeTypes = Array.from(schemaComponentMap.keys()).join(", ");
+
+  const pageTsContents = await renderTemplateFile("+page.ts.mustache", { acceptMimeTypes });
   await writeTsFile(svelteRouterPath, "+page.ts", pageTsContents, false);
 
   const components = Array.from(schemaComponentMap.values()).map(component => `${component}Component`);
