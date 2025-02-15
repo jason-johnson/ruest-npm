@@ -9,6 +9,10 @@
     "build": "npm run build:ruest-svelte-cli",
     "build:ruest-svelte-cli": "cd packages/svelte-cli && npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jason-johnson/ruest-npm.git"
+  },
   "keywords": [],
   "author": "Jason Johnson"
 }
