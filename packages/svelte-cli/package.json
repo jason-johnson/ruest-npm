@@ -1,6 +1,6 @@
 {
   "name": "ruest-svelte-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI for setting up a Svelte app to talk to a Ruest server",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
