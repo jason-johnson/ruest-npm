@@ -3,12 +3,10 @@
  * * If you modify it by hand, IT WILL NOT BE REGENERATED. If you wish to regenerate the file
  * * please remove it before rerunning ruest-svelte-cli.
  -->
- {{=<% %>=}}
 <script lang="ts">
-  import type { <%name%> } from '../ruest/<%name%>'
+  import type { {{name}} } from '../ruest/<%name%>'
 
-  export let data: <%name%>
+  export let data: {{name}}
 </script>
 
-<h1>${<%name%>}</h1>
-<%={{ }}=%>
+<h1>${JSON.stringify(data)}</h1>
