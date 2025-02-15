@@ -1,5 +1,5 @@
 {
-  "name": "@ruest/svelte-cli",
+  "name": "ruest-svelte-cli",
   "version": "1.0.0",
   "description": "CLI for setting up a Svelte app to talk to a Ruest server",
   "main": "./dist/index.js",
