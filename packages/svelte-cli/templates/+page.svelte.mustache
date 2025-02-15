@@ -1,0 +1,21 @@
+<script lang="ts">
+    {{#components}}
+    import {{.}} from '$lib/components/{{.}}.svelte';
+    {{/components}}
+    import MissingContentType from '$lib/components/errors/MissingContentType.svelte';
+    import UnknownContentType from '$lib/components/errors/UnknownContentType.svelte';
+
+    import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+</script>
+
+{{#routes}}
+{#if data.contentType === '{{contentType}}'}
+    <{{component}} data={data.item} />
+{{/routes}}
+{:else if data.contentType === 'unknown'}
+    <MissingContentType {data} />
+{:else}
+    <UnknownContentType {data} />
+{/if}
