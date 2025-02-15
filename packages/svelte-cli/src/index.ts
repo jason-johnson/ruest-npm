@@ -3,8 +3,9 @@
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { compile, JSONSchema } from "json-schema-to-typescript";
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { Url } from "node:url";
 
 const bannerComment = `
 /**
@@ -48,34 +49,38 @@ async function processEntry(input: RuestSchemaEntry, libFolder: string) {
   console.log("Schema title:", title);
   console.log("Schema:", input.schema);
 
-  const ts = await compile(input.schema, title, { additionalProperties: false, bannerComment: bannerComment })
+  const ts = await compile(input.schema, title, {
+    additionalProperties: false,
+    bannerComment: bannerComment,
+  });
   console.log("Generated TypeScript:", ts);
-  
+
   const ruestFolder = join(libFolder, "ruest");
   await writeTsFile(ruestFolder, `${title}.ts`, ts);
 
   const componentFolder = join(libFolder, "components");
-  await writeTsFile(componentFolder, `${title}Component.svelte`, `<script lang="ts">
+  const componentContents = `<script lang="ts">
   import type { ${title} } from '../ruest/${title}'
 
   export let data: ${title}
 </script>
 
-<h1>${title}</h1>`, false);
+<h1>${title}</h1>`;
+
+  await writeTsFile(componentFolder, `${title}Component.svelte`, componentContents, false);
 }
 
-const argv = yargs(hideBin(process.argv))
-  .usage("usage: $0 <Ruest server address>")
-  .demandCommand(1, "Ruest compatible server address is required")
-  .help(true)
-  .parseSync();
+async function writeEnvFile(serverUrl: string) {
+  const envContents = `VITE_RUEST_SERVER="${serverUrl}"`;
 
-const serverAddress = argv._[0] as string;
-const serverUrl = new URL("/.schema.json", serverAddress);
+  await writeTsFile(".", ".env", envContents);
+}
 
-console.log("Fetching schema...");
+async function processSchema(serverUrl: URL) {
+  console.log("Fetching schema...");
 
-fetch(serverUrl).then(async (response) => {
+  const response = await fetch(serverUrl);
+
   if (!response.ok) {
     console.error(
       `Failed to fetch schema, server responded with: ${response.status} - ${response.statusText}`
@@ -92,15 +97,32 @@ fetch(serverUrl).then(async (response) => {
   for (const entry of schema) {
     const rs = entry as RuestSchemaEntry;
     const title = rs.schema.title ?? "Untitled";
-    
+
     for (const mime of rs.mime_types) {
       schemaComponentMap.set(mime, title);
       knownMimeTypes.add(mime);
     }
 
-    processEntry(rs, libFolder).catch((err) => { console.error("Failed to process schema entry:", err); });
+    processEntry(rs, libFolder).catch((err) => {
+      console.error("Failed to process schema entry:", err);
+    });
   }
+
+  await writeEnvFile(serverUrl.toString());
 
   console.log("Schema component map:", schemaComponentMap);
   console.log("Known MIME Types:", knownMimeTypes);
+}
+
+const argv = yargs(hideBin(process.argv))
+  .usage("usage: $0 <Ruest server address>")
+  .demandCommand(1, "Ruest compatible server address is required")
+  .help(true)
+  .parseSync();
+
+const serverAddress = argv._[0] as string;
+const serverUrl = new URL("/.schema.json", serverAddress);
+
+processSchema(serverUrl).catch((err) => {
+  console.error("Failed to process schema:", err);
 });
