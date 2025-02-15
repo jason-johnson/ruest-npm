@@ -3,8 +3,9 @@
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
 import { compile, JSONSchema } from "json-schema-to-typescript";
-import { access, mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import Mustatch from "mustache";
 
 const noModifyBannerComment = `
 /**
@@ -32,6 +33,13 @@ async function exists(path: string) {
   } catch {
     return false;
   }
+}
+
+async function renderTemplateFile(templatePath: string, view: any) : Promise<string> {
+  const path = join(__dirname, "templates", templatePath);
+  const contents = await readFile(path, "utf-8");
+
+  return Mustatch.render(contents, view);
 }
 
 async function writeTsFile(
@@ -70,14 +78,7 @@ async function processEntry(input: RuestSchemaEntry, libFolder: string) {
   await writeTsFile(ruestFolder, `${title}.ts`, ts);
 
   const componentFolder = join(libFolder, "components");
-  const componentContents = `${canModifyBannerComment}
-<script lang="ts">
-  import type { ${title} } from '../ruest/${title}'
-
-  export let data: ${title}
-</script>
-
-<h1>${title}</h1>`;
+  const componentContents = await renderTemplateFile("component.svelte.mustache", { name: title });
 
   await writeTsFile(
     componentFolder,
