@@ -5,7 +5,6 @@ import { hideBin } from "yargs/helpers";
 import { compile, JSONSchema } from "json-schema-to-typescript";
 import { access, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { Url } from "node:url";
 
 const noModifyBannerComment = `
 /**
