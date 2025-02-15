@@ -115,8 +115,10 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
   await writeTsFile(svelteRouterPath, "+page.svelte", pageSvelteContents, false);
 }
 
-async function processSchema(serverUrl: URL) {
+async function processSchema(serverAddress: string) {
   console.log("Fetching schema...");
+
+  const serverUrl = new URL("/.schema.json", serverAddress);
 
   const response = await fetch(serverUrl);
 
@@ -146,7 +148,7 @@ async function processSchema(serverUrl: URL) {
   }
 
   await writeErrorFiles();
-  await writeEnvFile(serverUrl.toString());
+  await writeEnvFile(serverAddress);
   await writeHooksFile();
   await writeSvelteRouter(schemaComponentMap);
 }
@@ -158,8 +160,7 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 const serverAddress = argv._[0] as string;
-const serverUrl = new URL("/.schema.json", serverAddress);
 
-processSchema(serverUrl).catch((err) => {
+processSchema(serverAddress).catch((err) => {
   console.error("Failed to process schema:", err);
 });
