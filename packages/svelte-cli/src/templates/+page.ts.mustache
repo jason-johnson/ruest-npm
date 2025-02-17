@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
 	if (!res.ok) {
 		return {
-			status: res.status,
+			statusCode: res.status,
 			statusText: res.statusText,
 			item: null,
 			contentType: 'ruest_server_load_error',
@@ -25,7 +25,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 	return {
 		item,
 		contentType: res.headers.get('content-type') ?? 'unknown',
-		status: res.status,
+		statusCode: res.status,
 		statusText: res.statusText,
 	};
 };
