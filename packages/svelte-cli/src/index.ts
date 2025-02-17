@@ -81,6 +81,9 @@ async function writeErrorFiles() {
 
   const unknownContentTypeContents = await renderTemplateFile("UnknownContentType.svelte.mustache", {});
   await writeTsFile(errorsPath, "UnknownContentType.svelte", unknownContentTypeContents, false);
+
+  const requestFailedContents = await renderTemplateFile("RequestFailed.svelte.mustache", {});
+  await writeTsFile(errorsPath, "RequestFailed.svelte", requestFailedContents, false);
 }
 
 async function writeEnvFile(serverUrl: string) {
@@ -104,13 +107,10 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
 
   const components = Array.from(schemaComponentMap.values()).map(component => `${component}Component`);
   
-  var routes = new Array<{contentType: string, component: string, logic: string}>();
+  var routes = new Array<{contentType: string, component: string}>();
 
-  var first = true;
   for (const [contentType, component] of schemaComponentMap) {
-    const logic = first ? "{#if" : "{:else if";
-    first = false;
-    routes.push({ contentType, component: `${component}Component`, logic });
+    routes.push({ contentType, component: `${component}Component` });
   }
 
   const pageSvelteContents = await renderTemplateFile("+page.svelte.mustache", { components, routes });

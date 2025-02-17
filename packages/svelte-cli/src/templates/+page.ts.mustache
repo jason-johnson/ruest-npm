@@ -3,7 +3,6 @@
  * * If you modify it by hand, IT WILL NOT BE REGENERATED. If you wish to regenerate the file
  * * please remove it before rerunning ruest-svelte-cli.
  * */
-import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
 const acceptMimeTypes = "{{{ acceptMimeTypes }}}"
@@ -14,12 +13,19 @@ export const load: PageLoad = async ({ fetch, params }) => {
 	const res = await fetch(url, { headers: { accept: acceptMimeTypes } });
 
 	if (!res.ok) {
-		error(res.status, res.statusText)
+		return {
+			status: res.status,
+			statusText: res.statusText,
+			item: null,
+			contentType: 'ruest_server_load_error',
+		}
 	}
 
 	const item = await res.json();
 	return {
 		item,
 		contentType: res.headers.get('content-type') ?? 'unknown',
+		status: res.status,
+		statusText: res.statusText,
 	};
 };
