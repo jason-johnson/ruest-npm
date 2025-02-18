@@ -3,27 +3,35 @@
  * * If you modify it by hand, IT WILL NOT BE REGENERATED. If you wish to regenerate the file
  * * please remove it before rerunning ruest-svelte-cli.
  -->
- <script lang="ts">
-    {{#components}}
+<script lang="ts">
+	{{#components}}
     import {{.}} from '$lib/components/{{.}}.svelte';
     {{/components}}
-    import MissingContentType from '$lib/components/errors/MissingContentType.svelte';
-    import UnknownContentType from '$lib/components/errors/UnknownContentType.svelte';
-    import RequestFailed from '$lib/components/errors/RequestFailed.svelte';
+    import LoadingComponent from '$lib/components/LoadingComponent.svelte';
+	import MissingContentType from '$lib/components/errors/MissingContentType.svelte';
+	import UnknownContentType from '$lib/components/errors/UnknownContentType.svelte';
+	import RequestFailed from '$lib/components/errors/RequestFailed.svelte';
+    import RejectedPromise from '$lib/components/errors/RejectedPromise.svelte';
 
-    import type { PageProps } from './$types';
+	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
 
-{#if data.contentType == 'ruest_server_load_error'}
-    <RequestFailed {data} />
-{{#routes}}
-{:else if data.contentType === '{{{contentType}}}'}
-    <{{component}} data={data.item} />
-{{/routes}}
-{:else if data.contentType === 'unknown'}
-    <MissingContentType {data} />
-{:else}
-    <UnknownContentType {data} />
-{/if}
+{#await data.response}
+	<LoadingComponent />
+{:then data}
+	{#if data.contentType == 'ruest_server_load_error'}
+		<RequestFailed {data} />
+	{{#routes}}
+    {:else if data.contentType === '{{{contentType}}}'}
+        <{{component}} data={data.item} />
+    {{/routes}}
+	{:else if data.contentType === 'unknown'}
+		<MissingContentType {data} />
+	{:else}
+		<UnknownContentType {data} />
+	{/if}
+{:catch error}
+    <RejectedPromise {error} />
+{/await}

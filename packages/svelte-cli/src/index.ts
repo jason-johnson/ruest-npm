@@ -57,6 +57,12 @@ async function writeTsFile(folder: string, fileName: string, content: string, ov
   await writeFile(file, data);
 }
 
+async function writeMustacheFile(folder: string, fileName: string, view = {}, overwrite = false) {
+  const templateFileName = `${fileName}.mustache`;
+  const contents = await renderTemplateFile(templateFileName, view);
+  await writeTsFile(folder, fileName, contents, overwrite);
+}
+
 async function processEntry(input: RuestSchemaEntry, libFolder: string) {
   const title = input.schema.title ?? "Untitled";
 
@@ -76,14 +82,10 @@ async function processEntry(input: RuestSchemaEntry, libFolder: string) {
 
 async function writeErrorFiles() {
   const errorsPath = join("src", "lib", "components", "errors");
-  const missingContentTypeContents = await renderTemplateFile("MissingContentType.svelte.mustache", {});
-  await writeTsFile(errorsPath, "MissingContentType.svelte", missingContentTypeContents, false);
-
-  const unknownContentTypeContents = await renderTemplateFile("UnknownContentType.svelte.mustache", {});
-  await writeTsFile(errorsPath, "UnknownContentType.svelte", unknownContentTypeContents, false);
-
-  const requestFailedContents = await renderTemplateFile("RequestFailed.svelte.mustache", {});
-  await writeTsFile(errorsPath, "RequestFailed.svelte", requestFailedContents, false);
+  writeMustacheFile(errorsPath, "MissingContentType.svelte");
+  writeMustacheFile(errorsPath, "UnknownContentType.svelte");
+  writeMustacheFile(errorsPath, "RequestFailed.svelte");
+  writeMustacheFile(errorsPath, "RejectedPromise.svelte");
 }
 
 async function writeEnvFile(serverUrl: string) {
@@ -93,8 +95,7 @@ async function writeEnvFile(serverUrl: string) {
 }
 
 async function writeHooksFile() {
-  const hooksContents = await renderTemplateFile("hooks.server.ts.mustache", { });
-  await writeTsFile("src", "hooks.server.ts", hooksContents, false);
+  writeMustacheFile("src", "hooks.server.ts");
 }
 
 async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
@@ -102,8 +103,7 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
 
   const acceptMimeTypes = Array.from(schemaComponentMap.keys()).join(", ");
 
-  const pageTsContents = await renderTemplateFile("+page.ts.mustache", { acceptMimeTypes });
-  await writeTsFile(svelteRouterPath, "+page.ts", pageTsContents, false);
+  writeMustacheFile(svelteRouterPath, "+page.ts", { acceptMimeTypes });
 
   const components = Array.from(schemaComponentMap.values()).map(component => `${component}Component`);
   
@@ -113,8 +113,7 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
     routes.push({ contentType, component: `${component}Component` });
   }
 
-  const pageSvelteContents = await renderTemplateFile("+page.svelte.mustache", { components, routes });
-  await writeTsFile(svelteRouterPath, "+page.svelte", pageSvelteContents, false);
+  writeMustacheFile(svelteRouterPath, "+page.svelte", { components, routes });
 }
 
 async function processSchema(serverAddress: string) {
@@ -150,6 +149,7 @@ async function processSchema(serverAddress: string) {
   }
 
   await writeErrorFiles();
+  await writeMustacheFile(join("src", "lib", "components"), "LoadingComponent.svelte");
   await writeEnvFile(serverAddress);
   await writeHooksFile();
   await writeSvelteRouter(schemaComponentMap);

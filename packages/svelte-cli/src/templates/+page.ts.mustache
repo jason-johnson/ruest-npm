@@ -7,25 +7,33 @@ import type { PageLoad } from './$types';
 
 const acceptMimeTypes = "{{{ acceptMimeTypes }}}"
 
-export const load: PageLoad = async ({ fetch, params }) => {
-	const url = new URL(params.path, import.meta.env.VITE_RUEST_SERVER ?? "http://localhost:8080")
-	console.log(`Load URL: ${url.toString()}`);
-	const res = await fetch(url, { headers: { accept: acceptMimeTypes } });
-
-	if (!res.ok) {
+// This function is needed to allow +page.svelte to await the result instead of the load function
+async function loadData(url: URL) {
+	const resp = await fetch(url, { headers: { accept: acceptMimeTypes } });
+	
+	if (!resp.ok) {
 		return {
-			statusCode: res.status,
-			statusText: res.statusText,
+			statusCode: resp.status,
+			statusText: resp.statusText,
 			item: null,
 			contentType: 'ruest_server_load_error',
 		}
 	}
 
-	const item = await res.json();
+	const item = await resp.json();
 	return {
 		item,
-		contentType: res.headers.get('content-type') ?? 'unknown',
-		statusCode: res.status,
-		statusText: res.statusText,
+		contentType: resp.headers.get('content-type') ?? 'unknown',
+		statusCode: resp.status,
+		statusText: resp.statusText,
 	};
+}
+
+// We need this load function instead of doing it in the +page.svelte function so the params will change and routing will work
+export const load: PageLoad = ({ params }) => {
+	const url = new URL(params.path, import.meta.env.VITE_RUEST_SERVER ?? "http://localhost:8080")
+	console.log(`Load URL: ${url.toString()}`);
+	return {
+		response: loadData(url),
+	}
 };
