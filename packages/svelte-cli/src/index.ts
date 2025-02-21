@@ -84,7 +84,7 @@ async function writeErrorFiles() {
 async function writeEnvFile(serverUrl: string) {
   const envContents = await renderTemplateFile("dotEnv.mustache", { serverUrl });
 
-  await writeTsFile(".", ".env", envContents, false);
+  await writeTsFile(".", ".env", envContents);
 }
 
 async function writeHooksFile() {
