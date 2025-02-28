@@ -3,7 +3,8 @@
  * * If you modify it by hand, IT WILL NOT BE REGENERATED. If you wish to regenerate the file
  * * please remove it before rerunning ruest-svelte-cli.
  * */
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
+import { env } from '$env/dynamic/private';
 
 const acceptMimeTypes = "{{{ acceptMimeTypes }}}"
 
@@ -30,8 +31,8 @@ async function loadData(url: URL) {
 }
 
 // We need this load function instead of doing it in the +page.svelte function so the params will change and routing will work
-export const load: PageLoad = ({ params }) => {
-	const url = new URL(params.path, import.meta.env.VITE_RUEST_SERVER ?? "http://localhost:8080")
+export const load: PageServerLoad = ({ params }) => {
+	const url = new URL(params.path, env.RUEST_SERVER ?? "http://localhost:8080")
 	console.log(`Load URL: ${url.toString()}`);
 	return {
 		response: loadData(url),

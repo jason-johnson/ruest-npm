@@ -96,7 +96,7 @@ async function writeSvelteRouter(schemaComponentMap: Map<string, string>) {
 
   const acceptMimeTypes = Array.from(schemaComponentMap.keys()).join(", ");
 
-  writeMustacheFile(svelteRouterPath, "+page.ts", { acceptMimeTypes });
+  writeMustacheFile(svelteRouterPath, "+page.server.ts", { acceptMimeTypes });
 
   const components = Array.from(schemaComponentMap.values()).map(component => `${component}Component`);
   
