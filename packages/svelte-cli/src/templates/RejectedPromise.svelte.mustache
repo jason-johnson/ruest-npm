@@ -5,6 +5,8 @@
 -->
 <script lang="ts">
 	export let error: any;
+
+	console.log(`Rejected Promise: ${JSON.stringify(error)}`);
 </script>
 
 {#if import.meta.env.DEV}

@@ -9,6 +9,8 @@
 		statusText: string;
 	}
 	export let data: RequestFailedProps;
+
+	console.log(`Request Failed: ${JSON.stringify(data)}`);
 </script>
 
 {#if import.meta.env.DEV}
